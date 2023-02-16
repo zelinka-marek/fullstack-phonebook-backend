@@ -32,4 +32,17 @@ app.get("/api/persons", (_request, response) => {
   response.json(persons);
 });
 
+app.get("/info", (_request, response) => {
+  const today = new Date();
+  const formattedDate = new Intl.DateTimeFormat("en", {
+    dateStyle: "full",
+    timeStyle: "short",
+  }).format(today);
+  response.send(
+    `<p>Phonebook has info for ${persons.length} ${
+      persons.length === 1 ? "person" : "people"
+    }</p><p>${formattedDate}</p>`
+  );
+});
+
 app.listen(port, () => console.log(`Running on port ${port}`));
