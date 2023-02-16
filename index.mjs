@@ -1,4 +1,5 @@
 import express from "express";
+import morgan from "morgan";
 
 const port = 3001;
 
@@ -27,6 +28,8 @@ let persons = [
 
 const app = express();
 app.use(express.json());
+
+app.use(morgan("tiny"));
 
 app.get("/info", (_request, response) => {
   const today = new Date();
