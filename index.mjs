@@ -28,4 +28,8 @@ const persons = [
 const app = express();
 app.use(express.json());
 
+app.get("/api/persons", (_request, response) => {
+  response.json(persons);
+});
+
 app.listen(port, () => console.log(`Running on port ${port}`));
