@@ -28,10 +28,6 @@ const persons = [
 const app = express();
 app.use(express.json());
 
-app.get("/api/persons", (_request, response) => {
-  response.json(persons);
-});
-
 app.get("/info", (_request, response) => {
   const today = new Date();
   const formattedDate = new Intl.DateTimeFormat("en", {
@@ -43,6 +39,21 @@ app.get("/info", (_request, response) => {
       persons.length === 1 ? "person" : "people"
     }</p><p>${formattedDate}</p>`
   );
+});
+
+app.get("/api/persons", (_request, response) => {
+  response.json(persons);
+});
+
+app.get("/api/persons/:id", (request, response) => {
+  const { id } = request.params;
+
+  const person = persons.find((person) => person.id === Number(id));
+  if (!person) {
+    return response.status(404).end();
+  }
+
+  response.json(person);
 });
 
 app.listen(port, () => console.log(`Running on port ${port}`));
