@@ -3,13 +3,16 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "start": "node index.mjs",
-    "dev": "node --watch index.mjs",
+    "start": "cross-env NODE_ENV=production node index.mjs",
+    "dev": "cross-env NODE_ENV=development node --watch index.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "prettier": {},
   "dependencies": {
     "express": "^4.18.2",
     "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
   }
 }

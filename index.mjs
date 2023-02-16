@@ -29,7 +29,25 @@ let persons = [
 const app = express();
 app.use(express.json());
 
-app.use(morgan("tiny"));
+app.use(
+  morgan((tokens, request, response) => {
+    let body;
+    if (process.env.NODE_ENV !== "production") {
+      body = JSON.stringify(request.body);
+    }
+
+    return [
+      tokens.method(request, response),
+      tokens.url(request, response),
+      tokens.status(request, response),
+      tokens.res(request, response, "content-length"),
+      "-",
+      tokens["response-time"](request, response),
+      "ms",
+      body,
+    ].join(" ");
+  })
+);
 
 app.get("/info", (_request, response) => {
   const today = new Date();
