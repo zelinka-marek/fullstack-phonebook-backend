@@ -2,7 +2,7 @@ import express from "express";
 
 const port = 3001;
 
-const persons = [
+let persons = [
   {
     id: 1,
     name: "Arto Hellas",
@@ -54,6 +54,14 @@ app.get("/api/persons/:id", (request, response) => {
   }
 
   response.json(person);
+});
+
+app.delete("/api/persons/:id", (request, response) => {
+  const { id } = request.params;
+
+  persons = persons.filter((person) => person.id !== Number(id));
+
+  response.status(204).end();
 });
 
 app.listen(port, () => console.log(`Running on port ${port}`));
