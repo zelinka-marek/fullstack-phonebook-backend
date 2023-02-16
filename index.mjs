@@ -64,4 +64,18 @@ app.delete("/api/persons/:id", (request, response) => {
   response.status(204).end();
 });
 
+app.post("/api/persons", (request, response) => {
+  const { name, number } = request.body;
+
+  const person = {
+    id: persons.length + 1,
+    name,
+    number,
+  };
+
+  persons = persons.concat(person);
+
+  response.status(201).json(person);
+});
+
 app.listen(port, () => console.log(`Running on port ${port}`));
