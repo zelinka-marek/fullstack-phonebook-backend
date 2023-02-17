@@ -1,8 +1,12 @@
 import cors from "cors";
 import express from "express";
 import morgan from "morgan";
+import { Person } from "./models/person.js";
 
-const port = 3001;
+const port = process.env.PORT;
+if (!port) {
+  throw new Error("PORT must be set");
+}
 
 let persons = [
   {
@@ -65,7 +69,9 @@ app.get("/info", (_request, response) => {
 });
 
 app.get("/api/persons", (_request, response) => {
-  response.json(persons);
+  Person.find().then((persons) => {
+    response.json(persons);
+  });
 });
 
 app.get("/api/persons/:id", (request, response) => {
