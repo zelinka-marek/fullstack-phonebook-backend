@@ -32,19 +32,21 @@ app.use(
   })
 );
 
-app.get("/info", (_request, response) => {
+app.get("/info", (_request, response, next) => {
   const today = new Date().toLocaleString("en", {
     dateStyle: "full",
     timeStyle: "short",
   });
 
-  Person.find().then((persons) => {
-    response.send(
-      `<p>Phonebook has info for ${persons.length} ${
-        persons.length === 1 ? "person" : "people"
-      }</p><p>${today}</p>`
-    );
-  });
+  Person.find()
+    .then((persons) => {
+      response.send(
+        `<p>Phonebook has info for ${persons.length} ${
+          persons.length === 1 ? "person" : "people"
+        }</p><p>${today}</p>`
+      );
+    })
+    .catch(next);
 });
 
 app.get("/api/persons", (_request, response) => {
@@ -53,23 +55,27 @@ app.get("/api/persons", (_request, response) => {
   });
 });
 
-app.get("/api/persons/:id", (request, response) => {
+app.get("/api/persons/:id", (request, response, next) => {
   const { id } = request.params;
 
-  Person.findById(id).then((person) => {
-    response.json(person);
-  });
+  Person.findById(id)
+    .then((person) => {
+      response.json(person);
+    })
+    .catch(next);
 });
 
-app.delete("/api/persons/:id", (request, response) => {
+app.delete("/api/persons/:id", (request, response, next) => {
   const { id } = request.params;
 
-  Person.findByIdAndDelete(id).then(() => {
-    response.status(204).end();
-  });
+  Person.findByIdAndDelete(id)
+    .then(() => {
+      response.status(204).end();
+    })
+    .catch(next);
 });
 
-app.post("/api/persons", (request, response) => {
+app.post("/api/persons", (request, response, next) => {
   const data = request.body;
 
   if (!data.name) {
@@ -90,9 +96,24 @@ app.post("/api/persons", (request, response) => {
     number: data.number,
   });
 
-  person.save().then((savedPerson) => {
-    response.status(201).json(savedPerson);
-  });
+  person
+    .save()
+    .then((savedPerson) => {
+      response.status(201).json(savedPerson);
+    })
+    .catch(next);
 });
+
+function errorHandler(error, _request, response, next) {
+  console.error(error);
+
+  if (error.name === "CastError") {
+    return response.status(400).json({ error: "malformatted id" });
+  }
+
+  next(error);
+}
+
+app.use(errorHandler);
 
 app.listen(port, () => console.log(`Running on port ${port}`));
