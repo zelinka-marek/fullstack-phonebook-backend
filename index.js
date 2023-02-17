@@ -56,16 +56,18 @@ app.use(
 );
 
 app.get("/info", (_request, response) => {
-  const today = new Date();
-  const formattedDate = new Intl.DateTimeFormat("en", {
+  const today = new Date().toLocaleString("en", {
     dateStyle: "full",
     timeStyle: "short",
-  }).format(today);
-  response.send(
-    `<p>Phonebook has info for ${persons.length} ${
-      persons.length === 1 ? "person" : "people"
-    }</p><p>${formattedDate}</p>`
-  );
+  });
+
+  Person.find().then((persons) => {
+    response.send(
+      `<p>Phonebook has info for ${persons.length} ${
+        persons.length === 1 ? "person" : "people"
+      }</p><p>${today}</p>`
+    );
+  });
 });
 
 app.get("/api/persons", (_request, response) => {
@@ -77,47 +79,43 @@ app.get("/api/persons", (_request, response) => {
 app.get("/api/persons/:id", (request, response) => {
   const { id } = request.params;
 
-  const person = persons.find((person) => person.id === Number(id));
-  if (!person) {
-    return response.status(404).end();
-  }
-
-  response.json(person);
+  Person.findById(id).then((person) => {
+    response.json(person);
+  });
 });
 
 app.delete("/api/persons/:id", (request, response) => {
   const { id } = request.params;
 
-  persons = persons.filter((person) => person.id !== Number(id));
-
-  response.status(204).end();
+  Person.findByIdAndDelete(id).then(() => {
+    response.status(204).end();
+  });
 });
 
 app.post("/api/persons", (request, response) => {
-  const { name, number } = request.body;
+  const data = request.body;
 
-  if (!name) {
+  if (!data.name) {
     return response.status(400).json({ error: "name is missing" });
   }
 
-  const existingPerson = persons.find((person) => person.name === name);
-  if (existingPerson) {
-    return response.status(400).json({ error: "name must be unique" });
-  }
+  // const existingPerson = persons.find((person) => person.name === name);
+  // if (existingPerson) {
+  //   return response.status(400).json({ error: "name must be unique" });
+  // }
 
-  if (!number) {
+  if (!data.number) {
     return response.status(400).json({ error: "number is missing" });
   }
 
-  const person = {
-    id: persons.length + 1,
-    name,
-    number,
-  };
+  const person = new Person({
+    name: data.name,
+    number: data.number,
+  });
 
-  persons = persons.concat(person);
-
-  response.status(201).json(person);
+  person.save().then((savedPerson) => {
+    response.status(201).json(savedPerson);
+  });
 });
 
 app.listen(port, () => console.log(`Running on port ${port}`));
