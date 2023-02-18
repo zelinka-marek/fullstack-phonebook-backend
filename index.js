@@ -9,21 +9,20 @@ if (!port) {
 }
 
 const requestLogger = morgan((tokens, request, response) => {
-  let body;
-  if (process.env.NODE_ENV !== "production") {
-    body = JSON.stringify(request.body);
-  }
-
-  return [
+  const parts = [
     tokens.method(request, response),
     tokens.url(request, response),
     tokens.status(request, response),
     tokens.res(request, response, "content-length"),
     "-",
-    tokens["response-time"](request, response),
-    "ms",
-    body,
-  ].join(" ");
+    `${tokens["response-time"](request, response)}ms`,
+  ];
+
+  if (process.env.NODE_ENV !== "production") {
+    parts.push(JSON.stringify(request.body));
+  }
+
+  return parts.join(" ");
 });
 
 function errorHandler(error, _request, response, next) {
