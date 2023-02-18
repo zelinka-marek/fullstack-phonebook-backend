@@ -68,12 +68,6 @@ app.get("/api/persons/:id", (request, response, next) => {
     .catch(next);
 });
 
-app.delete("/api/persons/:id", (request, response, next) => {
-  Person.findByIdAndDelete(request.params.id)
-    .then(() => response.status(204).end())
-    .catch(next);
-});
-
 app.post("/api/persons", (request, response, next) => {
   const data = request.body;
 
@@ -111,6 +105,12 @@ app.put("/api/persons/:id", (request, response, next) => {
     { new: true }
   )
     .then((updatedPerson) => response.json(updatedPerson))
+    .catch(next);
+});
+
+app.delete("/api/persons/:id", (request, response, next) => {
+  Person.findByIdAndDelete(request.params.id)
+    .then(() => response.status(204).end())
     .catch(next);
 });
 
