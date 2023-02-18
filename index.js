@@ -8,29 +8,38 @@ if (!port) {
   throw new Error("PORT must be set");
 }
 
+const requestLogger = morgan((tokens, request, response) => {
+  let body;
+  if (process.env.NODE_ENV !== "production") {
+    body = JSON.stringify(request.body);
+  }
+
+  return [
+    tokens.method(request, response),
+    tokens.url(request, response),
+    tokens.status(request, response),
+    tokens.res(request, response, "content-length"),
+    "-",
+    tokens["response-time"](request, response),
+    "ms",
+    body,
+  ].join(" ");
+});
+
+function errorHandler(error, _request, response, next) {
+  console.error(error);
+
+  if (error.name === "CastError") {
+    return response.status(400).json({ error: "malformatted id" });
+  }
+
+  next(error);
+}
+
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-app.use(
-  morgan((tokens, request, response) => {
-    let body;
-    if (process.env.NODE_ENV !== "production") {
-      body = JSON.stringify(request.body);
-    }
-
-    return [
-      tokens.method(request, response),
-      tokens.url(request, response),
-      tokens.status(request, response),
-      tokens.res(request, response, "content-length"),
-      "-",
-      tokens["response-time"](request, response),
-      "ms",
-      body,
-    ].join(" ");
-  })
-);
+app.use(requestLogger);
 
 app.get("/info", (_request, response, next) => {
   const today = new Date().toLocaleString("en", {
@@ -39,39 +48,29 @@ app.get("/info", (_request, response, next) => {
   });
 
   Person.find()
-    .then((persons) => {
+    .then((persons) =>
       response.send(
         `<p>Phonebook has info for ${persons.length} ${
           persons.length === 1 ? "person" : "people"
         }</p><p>${today}</p>`
-      );
-    })
+      )
+    )
     .catch(next);
 });
 
 app.get("/api/persons", (_request, response) => {
-  Person.find().then((persons) => {
-    response.json(persons);
-  });
+  Person.find().then((persons) => response.json(persons));
 });
 
 app.get("/api/persons/:id", (request, response, next) => {
-  const { id } = request.params;
-
-  Person.findById(id)
-    .then((person) => {
-      response.json(person);
-    })
+  Person.findById(request.params.id)
+    .then((person) => response.json(person))
     .catch(next);
 });
 
 app.delete("/api/persons/:id", (request, response, next) => {
-  const { id } = request.params;
-
-  Person.findByIdAndDelete(id)
-    .then(() => {
-      response.status(204).end();
-    })
+  Person.findByIdAndDelete(request.params.id)
+    .then(() => response.status(204).end())
     .catch(next);
 });
 
@@ -91,44 +90,29 @@ app.post("/api/persons", (request, response, next) => {
     return response.status(400).json({ error: "number is missing" });
   }
 
-  const person = new Person({
+  new Person({
     name: data.name,
     number: data.number,
-  });
-
-  person
+  })
     .save()
-    .then((savedPerson) => {
-      response.status(201).json(savedPerson);
-    })
+    .then((savedPerson) => response.status(201).json(savedPerson))
     .catch(next);
 });
 
 app.put("/api/persons/:id", (request, response, next) => {
   const data = request.body;
-  const { id } = request.params;
 
-  const person = {
-    name: data.name,
-    number: data.number,
-  };
-
-  Person.findByIdAndUpdate(id, person, { new: true })
-    .then((updatedPerson) => {
-      response.json(updatedPerson);
-    })
+  Person.findByIdAndUpdate(
+    request.params.id,
+    {
+      name: data.name,
+      number: data.number,
+    },
+    { new: true }
+  )
+    .then((updatedPerson) => response.json(updatedPerson))
     .catch(next);
 });
-
-function errorHandler(error, _request, response, next) {
-  console.error(error);
-
-  if (error.name === "CastError") {
-    return response.status(400).json({ error: "malformatted id" });
-  }
-
-  next(error);
-}
 
 app.use(errorHandler);
 
